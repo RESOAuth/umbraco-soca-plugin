@@ -1,0 +1,27 @@
+{
+  "Soca": {
+    "EmergencyDisabled": false,
+    "Profiles": [
+      {
+        "Name": "staff",
+        "Surface": "backoffice",
+        "Issuer": "https://auth.resoauth.cloud",
+        "Origin": "https://cms.example.com",
+        "ClientName": "Example CMS",
+        "ClientUri": "https://cms.example.com/",
+        "PrivateKeyFile": "/run/secrets/soca-signing.pem",
+        "Enabled": false,
+        "MetadataMode": "hosted",
+        "InlineJwks": false,
+        "ProxyTemplate": "https://dynamic-cimd.resoauth.cloud/cimd/%s",
+        "AllowEmails": [],
+        "DenyEmails": [],
+        "AllowDomains": [],
+        "DenyDomains": [],
+        "MaxAgeSeconds": 3600,
+        "RequiredAcr": [],
+        "RequiredAmr": []
+      }
+    ]
+  }
+}

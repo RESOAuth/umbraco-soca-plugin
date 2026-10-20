@@ -1,0 +1,11 @@
+{
+  "$schema": "../../umbraco-package-schema.json",
+  "name": "SOCA",
+  "version": "0.1.0-alpha.1",
+  "extensions": [{
+    "type": "dashboard", "alias": "RESOAuth.Soca.Dashboard", "name": "SOCA settings",
+    "element": "/App_Plugins/Soca/dashboard.js", "weight": 10,
+    "meta": {"label": "SOCA", "pathname": "soca"},
+    "conditions": [{"alias": "Umb.Condition.SectionAlias", "match": "Umb.Section.Settings"}]
+  }]
+}

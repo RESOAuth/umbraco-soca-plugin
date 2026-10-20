@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../src/RESOAuth.Soca.Umbraco/RESOAuth.Soca.Umbraco.csproj" />
+    <PackageReference Include="Umbraco.Cms.Persistence.Sqlite" Version="17.7.1" />
+    <PackageReference Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="17.7.1" />
+    <PackageReference Include="Umbraco.Cms.Targets" Version="17.7.1" />
+    <Content Remove="appsettings.json;umbraco/**/*;wwwroot/**/*;appsettings-schema*.json;umbraco-package-schema.json" />
+    <Content Include="../src/RESOAuth.Soca.Umbraco/wwwroot/App_Plugins/Soca/**/*" Link="wwwroot/App_Plugins/Soca/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
