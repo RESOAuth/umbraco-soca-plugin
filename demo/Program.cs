@@ -29,6 +29,9 @@ if (Environment.GetEnvironmentVariable("SOCA_HOST_CHECKS") == "1")
             throw new InvalidOperationException("Native Umbraco boot failed", runtime.BootFailedException);
         await Task.Delay(250, timeout.Token);
     }
+    await app.Services.GetRequiredService<EmergencyStateInvalidator>().Completion.WaitAsync(timeout.Token);
+    if (app.Services.GetRequiredService<SocaOptions>().IsEmergency())
+        Console.WriteLine("SOCA_EMERGENCY_CHECKS: native key-independent startup and pending-state invalidation completed");
     using var scope = app.Services.CreateScope();
     var store = scope.ServiceProvider.GetRequiredService<ISocaStore>();
     var id = "tx:" + Guid.NewGuid().ToString("N");

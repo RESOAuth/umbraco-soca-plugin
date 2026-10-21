@@ -4,7 +4,7 @@ Result date: **2026-10-21**. Plugin **0.1.0-alpha.1**. Requirements revision:
 `60ea4db827457b4a4a7b11d79e86b654612a75e1`.
 
 **Umbraco 17.7.1**, **.NET SDK 10.0.402/runtime 10.0.13**: native compilation
-succeeded and **50 xUnit security cases passed**. Cases cover exact/nested/wildcard
+succeeded and **52 xUnit security cases passed**. Cases cover exact/nested/wildcard
 DNS semantics and malformed rules; admission default deny/deny precedence; boolean
 email verification; ES256 public metadata; deterministic proxy encoding and branding/
 legal fields; unsafe hostname/query proxy substitutions; evidence revisions; private,
@@ -54,3 +54,7 @@ OIDC certification, independent review, load and WCAG checks remain unverified.
 Provisioning, broad algorithms, automated rotation, profile/role mapping, diagnostics,
 provider logout and bounded existing-session revocation remain implementation gaps.
 See the [complete per-ID assessment](requirements-coverage.md).
+
+Hosted/proxy `jwks_uri` cases replace a PEM at the same path and confirm the public
+JWK changes the candidate revision, rejects old activation evidence and rejects
+pending state from the prior key. Enabled-only changes preserve that revision.

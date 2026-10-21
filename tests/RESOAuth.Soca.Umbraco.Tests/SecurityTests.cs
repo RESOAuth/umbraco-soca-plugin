@@ -6,6 +6,8 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Umbraco.Cms.Web.Website.Security;
 using Microsoft.AspNetCore.WebUtilities;
 using RESOAuth.Soca.Umbraco;
@@ -179,6 +181,40 @@ public sealed class SecurityTests : IDisposable
         var profile = Profile(); profile.PrivateKeyFile = "/missing/soca-active-test.pem";
         var options = new SocaOptions { Profiles = [profile] };
         Assert.Throws<FileNotFoundException>(() => options.Prepare("CMS"));
+    }
+    [Theory]
+    [InlineData("hosted")]
+    [InlineData("proxy")]
+    public async Task SamePathSigningKeyReplacementRejectsOldEvidenceAndPendingState(string mode)
+    {
+        var profile = Profile(); profile.MetadataMode = mode; profile.InlineJwks = false; profile.Enabled = true;
+        var revision = profile.Fingerprint; var document = SocaProfile.Canonical(profile.Document());
+        var services = new ServiceCollection().AddSingleton<ISocaStore>(new ProofStore(revision)).BuildServiceProvider();
+        var http = new DefaultHttpContext { RequestServices = services }; http.Request.Scheme = "https";
+        Protocol.Available(http, profile, new SocaOptions(), false);
+        using var replacement = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        File.WriteAllText(_keyFile, replacement.ExportPkcs8PrivateKeyPem());
+        Assert.Equal(document, SocaProfile.Canonical(profile.Document()));
+        Assert.NotEqual(revision, profile.Fingerprint);
+        Assert.Throws<InvalidOperationException>(() => Protocol.Available(http, profile, new SocaOptions(), false));
+        var current = profile.Fingerprint; profile.Enabled = false; Assert.Equal(current, profile.Fingerprint);
+        // Fresh document evidence cannot make state from the previous key valid.
+        http.RequestServices = new ServiceCollection().AddSingleton<ISocaStore>(new ProofStore(current)).BuildServiceProvider();
+        var properties = new AuthenticationProperties();
+        properties.Items["soca.test"] = "operator"; properties.Items["soca.tx"] = "one-use"; properties.Items["soca.revision"] = revision;
+        var options = new OpenIdConnectOptions(); Protocol.Configure(options, profile, new SocaOptions());
+        var received = new MessageReceivedContext(http, new AuthenticationScheme(profile.Scheme, null, typeof(OpenIdConnectHandler)), options, properties);
+        await options.Events.OnMessageReceived(received);
+        Assert.NotNull(received.Result?.Failure);
+    }
+
+    private sealed class ProofStore(string revision) : ISocaStore
+    {
+        public bool HasEvidence(string kind, string candidate) => candidate == revision;
+        public string? Consume(string key) => revision;
+        public void Insert(string key, string value, DateTime expires) => throw new NotSupportedException();
+        public void RecordEvidence(string kind, string candidate) => throw new NotSupportedException();
+        public void Invalidate() => throw new NotSupportedException();
     }
     [Fact]
     public void NamespacedSubjectChangesAcrossIssuers()

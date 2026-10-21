@@ -131,7 +131,7 @@ public sealed class SocaProfile
 
     public string Fingerprint => Hash(Canonical(new SortedDictionary<string, object?>
     {
-        ["issuer"] = Issuer, ["document"] = Document(), ["surface"] = Surface,
+        ["issuer"] = Issuer, ["document"] = Document(), ["public_jwk"] = PublicJwk(), ["surface"] = Surface,
         ["allow_emails"] = AllowEmails, ["deny_emails"] = DenyEmails,
         ["allow_domains"] = AllowDomains, ["deny_domains"] = DenyDomains,
         ["max_age"] = MaxAgeSeconds, ["acr"] = RequiredAcr, ["amr"] = RequiredAmr,

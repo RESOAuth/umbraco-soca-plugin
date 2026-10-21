@@ -8,11 +8,25 @@ namespace RESOAuth.Soca.Umbraco;
 // authentication remains available without loading any disabled provider signing key.
 public sealed class EmergencyStateInvalidator(SocaOptions options, IContentRoutingReadiness readiness, IServiceScopeFactory scopes) : BackgroundService
 {
+    private readonly TaskCompletionSource _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public Task Completion => _completion.Task;
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!options.IsEmergency() && !options.Profiles.Any(profile => profile.EmergencyDisabled)) return;
-        while (!readiness.IsReady) await Task.Delay(250, stoppingToken);
-        using var scope = scopes.CreateScope();
-        scope.ServiceProvider.GetRequiredService<ISocaStore>().Invalidate();
+        try
+        {
+            if (options.IsEmergency() || options.Profiles.Any(profile => profile.EmergencyDisabled))
+            {
+                while (!readiness.IsReady) await Task.Delay(250, stoppingToken);
+                using var scope = scopes.CreateScope();
+                scope.ServiceProvider.GetRequiredService<ISocaStore>().Invalidate();
+            }
+            _completion.TrySetResult();
+        }
+        catch (Exception error)
+        {
+            _completion.TrySetException(error);
+            throw;
+        }
     }
 }

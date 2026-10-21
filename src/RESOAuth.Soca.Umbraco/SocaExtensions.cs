@@ -25,7 +25,8 @@ public static class SocaExtensions
         builder.Services.AddAntiforgery();
         builder.Services.AddSingleton(options);
         builder.Services.TryAddScoped<ISocaStore, SocaStore>();
-        builder.Services.AddHostedService<EmergencyStateInvalidator>();
+        builder.Services.AddSingleton<EmergencyStateInvalidator>();
+        builder.Services.AddHostedService(services => services.GetRequiredService<EmergencyStateInvalidator>());
         foreach (var profile in options.Profiles.Where(profile => !options.IsEmergency(profile)))
         {
             if (profile.Surface == "backoffice")
