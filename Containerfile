@@ -7,9 +7,8 @@ RUN dotnet restore demo/Demo.csproj --locked-mode
 RUN dotnet publish demo/Demo.csproj --no-restore -c Release -o /out
 FROM mcr.microsoft.com/dotnet/aspnet:10.0.13@sha256:e4b445f93a5deeb6bd7de300febceb8dd7e481ac65ccf1b474eddc3642a3010f
 WORKDIR /app
+RUN chown app:app /app
 COPY --from=build --chown=app:app /out .
-USER root
-RUN mkdir -p /app/umbraco/Data /app/umbraco/Logs && chown -R app:app /app
 USER app
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
