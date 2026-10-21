@@ -3,6 +3,8 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Umbraco.Cms.Web.Common.Authorization;
 
@@ -11,9 +13,16 @@ namespace RESOAuth.Soca.Umbraco;
 [ApiController]
 [Route("umbraco/management/api/v1/soca")]
 [Authorize(Policy = AuthorizationPolicies.RequireAdminAccess)]
-public sealed class SocaManagementController(SocaOptions options, ISocaStore store) : ControllerBase
+public sealed class SocaManagementController(SocaOptions options, ISocaStore store, IAntiforgery antiforgery, IOptions<AntiforgeryOptions> antiforgeryOptions) : ControllerBase
 {
     private SocaProfile Profile(string name, string surface) => options.Profiles.Single(x => x.Name == name && x.Surface == surface);
+
+    [HttpGet("csrf")]
+    public IActionResult Csrf()
+    {
+        var tokens = antiforgery.GetAndStoreTokens(HttpContext);
+        return Ok(new { token = tokens.RequestToken, header = antiforgeryOptions.Value.HeaderName ?? "RequestVerificationToken" });
+    }
 
     [HttpGet]
     public IActionResult Status() => Ok(options.Profiles.Select(profile => new
@@ -25,6 +34,7 @@ public sealed class SocaManagementController(SocaOptions options, ISocaStore sto
         source = "Deployment configuration. All fields locked in the GUI."
     }));
 
+    [ValidateAntiForgeryToken]
     [HttpPost("{name}/{surface}/check")]
     public async Task<IActionResult> Check(string name, string surface, CancellationToken ct)
     {
@@ -44,6 +54,7 @@ public sealed class SocaManagementController(SocaOptions options, ISocaStore sto
         return Ok(new { document = "passed", revision = profile.Fingerprint, login = "real candidate test required" });
     }
 
+    [ValidateAntiForgeryToken]
     [HttpPost("{name}/{surface}/test")]
     public async Task<IActionResult> Test(string name, string surface)
     {
@@ -58,6 +69,7 @@ public sealed class SocaManagementController(SocaOptions options, ISocaStore sto
         return Ok(new { url = target });
     }
 
+    [ValidateAntiForgeryToken]
     [HttpPost("invalidate")]
     public IActionResult Invalidate() { store.Invalidate(); return Ok(new { pendingTransactions = "invalidated" }); }
 }

@@ -10,8 +10,17 @@ class SocaDashboard extends UmbElementMixin(LitElement) {
     this.consumeContext(UMB_AUTH_CONTEXT, context => { this.auth = context; this.load(); });
   }
   async request(path = '', method = 'GET') {
-    const token = await this.auth.getLatestToken();
-    const response = await fetch('/umbraco/management/api/v1/soca' + path, {method, headers: {Authorization: `Bearer ${token}`}});
+    const config = this.auth.getOpenApiConfiguration();
+    const token = await config.token();
+    const base = config.base || '';
+    const headers = {Authorization: `Bearer ${token}`};
+    if (method === 'POST') {
+      const csrfResponse = await fetch(base + '/umbraco/management/api/v1/soca/csrf', {credentials: config.credentials, headers});
+      if (!csrfResponse.ok) throw new Error('Local administrator session required.');
+      const csrf = await csrfResponse.json();
+      headers[csrf.header] = csrf.token;
+    }
+    const response = await fetch(base + '/umbraco/management/api/v1/soca' + path, {method, credentials: config.credentials, headers});
     if (!response.ok) throw new Error('SOCA operation failed. Check deployment configuration and operator access.');
     return response.json();
   }

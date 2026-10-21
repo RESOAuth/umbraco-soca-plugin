@@ -27,6 +27,8 @@ public static class SocaExtensions
         }
         if (options.Profiles.Select(x => (x.Name, x.Surface)).Distinct().Count() != options.Profiles.Count)
             throw new InvalidOperationException("SOCA profile and surface must be unique");
+        builder.PackageMigrationPlans().Add<SocaMigrationPlan>();
+        builder.Services.AddAntiforgery();
         builder.Services.AddSingleton(options);
         builder.Services.TryAddScoped<ISocaStore, SocaStore>();
         foreach (var profile in options.Profiles)

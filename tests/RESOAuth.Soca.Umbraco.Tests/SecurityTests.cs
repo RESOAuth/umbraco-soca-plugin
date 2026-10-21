@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc;
 using Umbraco.Cms.Web.Website.Security;
 using Microsoft.AspNetCore.WebUtilities;
 using RESOAuth.Soca.Umbraco;
@@ -155,6 +156,12 @@ public sealed class SecurityTests : IDisposable
         Assert.False(Protocol.OperatorMatches(switched, "operator-one"));
         Assert.False(Protocol.OperatorMatches(null, "operator-one"));
         Assert.False(Protocol.OperatorMatches(new ClaimsPrincipal(new ClaimsIdentity()), "operator-one"));
+    }
+    [Fact]
+    public void PrivilegedManagementWritesRequireNativeAntiforgeryValidation()
+    {
+        foreach (var name in new[] { "Check", "Test", "Invalidate" })
+            Assert.NotNull(typeof(SocaManagementController).GetMethod(name)!.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true).SingleOrDefault());
     }
     [Fact]
     public void NamespacedSubjectChangesAcrossIssuers()

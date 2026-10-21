@@ -2,6 +2,7 @@ using RESOAuth.Soca.Umbraco;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.example.json", optional: false, reloadOnChange: false);
+builder.Configuration.AddEnvironmentVariables();
 var extraConfig = Environment.GetEnvironmentVariable("SOCA_CONFIG_FILE");
 if (!string.IsNullOrEmpty(extraConfig)) builder.Configuration.AddJsonFile(extraConfig, optional: false, reloadOnChange: false);
 var dataDirectory = Path.Combine(builder.Environment.ContentRootPath, "umbraco", "Data");
@@ -17,6 +18,17 @@ app.MapSoca();
 await app.StartAsync();
 if (Environment.GetEnvironmentVariable("SOCA_HOST_CHECKS") == "1")
 {
+    // Umbraco 17.7 runs unattended package migrations after HTTP starts.
+    // Await its native readiness signal before touching the migrated table.
+    var readiness = app.Services.GetRequiredService<Umbraco.Cms.Core.Routing.IContentRoutingReadiness>();
+    var runtime = app.Services.GetRequiredService<Umbraco.Cms.Core.Services.IRuntimeState>();
+    using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+    while (!readiness.IsReady)
+    {
+        if (runtime.Level == Umbraco.Cms.Core.RuntimeLevel.BootFailed)
+            throw new InvalidOperationException("Native Umbraco boot failed", runtime.BootFailedException);
+        await Task.Delay(250, timeout.Token);
+    }
     using var scope = app.Services.CreateScope();
     var store = scope.ServiceProvider.GetRequiredService<ISocaStore>();
     var id = "tx:" + Guid.NewGuid().ToString("N");
