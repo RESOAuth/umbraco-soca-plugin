@@ -1,0 +1,9 @@
+**/bin
+**/obj
+.git
+demo/umbraco
+demo/wwwroot
+**/*.pem
+secrets
+.env
+demo/appsettings.json

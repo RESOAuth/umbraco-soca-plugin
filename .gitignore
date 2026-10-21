@@ -11,3 +11,10 @@ obj/
 !*.example
 dist/
 secrets/
+demo/umbraco/
+demo/wwwroot/
+demo/appsettings-schema*.json
+demo/umbraco-package-schema.json
+*.slnx
+demo/soca.json
+demo/appsettings.json

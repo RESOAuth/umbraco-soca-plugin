@@ -1,0 +1,33 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: '10.0.402'
+      - run: dotnet restore tests/RESOAuth.Soca.Umbraco.Tests/RESOAuth.Soca.Umbraco.Tests.csproj --locked-mode
+      - run: dotnet test tests/RESOAuth.Soca.Umbraco.Tests/RESOAuth.Soca.Umbraco.Tests.csproj --no-restore -c Release
+      - run: dotnet pack src/RESOAuth.Soca.Umbraco/RESOAuth.Soca.Umbraco.csproj --no-restore -c Release -o dist
+      - run: python3 tools/check-package.py
+      - name: Block known high and critical dependency vulnerabilities
+        run: python3 tools/check-vulnerabilities.py
+  native-host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: bash demo/test-host.sh
