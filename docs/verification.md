@@ -19,7 +19,9 @@ container fixture additionally exercises native store insertion, atomic consumpt
 replay rejection, invalidation and absence of provider-test evidence. The Containerfile
 builds/tests the package and runs the published host as the unprivileged native app user.
 A second clean host boots with global emergency disable and a missing signing key,
-asserting native local backoffice availability and disabled public metadata.
+asserting native local backoffice availability, completed pending-state invalidation
+and absent CIMD. The native empty-site catch-all returns HTML HTTP 200 for the
+unregistered metadata path, which is accepted only when SOCA JSON is absent.
 
 NuGet packaging and public-data checks passed: native assembly, dashboard, package
 manifest and transitive native-asset copy targets are included; no PEM/PFX/database
