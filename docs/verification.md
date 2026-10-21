@@ -4,7 +4,7 @@ Result date: **2026-10-21**. Plugin **0.1.0-alpha.1**. Requirements revision:
 `60ea4db827457b4a4a7b11d79e86b654612a75e1`.
 
 **Umbraco 17.7.1**, **.NET SDK 10.0.402/runtime 10.0.13**: native compilation
-succeeded and **47 xUnit security cases passed**. Cases cover exact/nested/wildcard
+succeeded and **50 xUnit security cases passed**. Cases cover exact/nested/wildcard
 DNS semantics and malformed rules; admission default deny/deny precedence; boolean
 email verification; ES256 public metadata; deterministic proxy encoding and branding/
 legal fields; unsafe hostname/query proxy substitutions; evidence revisions; private,
@@ -18,6 +18,8 @@ The real native SQLite demo installed **80 native tables**, including the packag
 container fixture additionally exercises native store insertion, atomic consumption,
 replay rejection, invalidation and absence of provider-test evidence. The Containerfile
 builds/tests the package and runs the published host as the unprivileged native app user.
+A second clean host boots with global emergency disable and a missing signing key,
+asserting native local backoffice availability and disabled public metadata.
 
 NuGet packaging and public-data checks passed: native assembly, dashboard, package
 manifest and transitive native-asset copy targets are included; no PEM/PFX/database

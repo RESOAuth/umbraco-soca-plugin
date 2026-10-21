@@ -146,4 +146,21 @@ public sealed class SocaOptions
 {
     public bool EmergencyDisabled { get; set; }
     public List<SocaProfile> Profiles { get; set; } = [];
+
+    public static bool EmergencyRequested(string? value) => value?.ToLowerInvariant() is "1" or "true" or "yes";
+    public bool IsEmergency(SocaProfile? profile = null) => EmergencyDisabled || profile?.EmergencyDisabled == true || EmergencyRequested(Environment.GetEnvironmentVariable("SOCA_EMERGENCY_DISABLED"));
+
+    public void Prepare(string defaultClientName)
+    {
+        foreach (var profile in Profiles)
+        {
+            if (string.IsNullOrWhiteSpace(profile.ClientName)) profile.ClientName = defaultClientName;
+            // Emergency recovery must boot even when a key/configuration is broken.
+            // No external provider or public metadata routes are registered for it.
+            if (!IsEmergency(profile)) profile.Validate();
+        }
+        var active = Profiles.Where(profile => !IsEmergency(profile)).ToArray();
+        if (active.Select(x => (x.Name, x.Surface)).Distinct().Count() != active.Length)
+            throw new InvalidOperationException("SOCA profile and surface must be unique");
+    }
 }

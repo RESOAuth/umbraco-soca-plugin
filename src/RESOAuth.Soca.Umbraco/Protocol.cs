@@ -147,7 +147,7 @@ public static class Protocol
     public static void Available(HttpContext context, SocaProfile profile, SocaOptions all, bool test)
     {
         var store = context.RequestServices.GetRequiredService<ISocaStore>();
-        if (all.EmergencyDisabled || profile.EmergencyDisabled || Environment.GetEnvironmentVariable("SOCA_EMERGENCY_DISABLED")?.ToLowerInvariant() is "1" or "true" or "yes")
+        if (all.IsEmergency(profile))
         { store.Invalidate(); throw new InvalidOperationException("SOCA emergency disabled"); }
         if (!store.HasEvidence("document", profile.Fingerprint) || !test && (!profile.Enabled || !store.HasEvidence("login", profile.Fingerprint)))
             throw new InvalidOperationException("SOCA requires document checks and a real candidate test before activation");

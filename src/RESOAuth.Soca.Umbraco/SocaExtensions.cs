@@ -20,18 +20,13 @@ public static class SocaExtensions
         builder.Config.GetSection("Soca").Bind(options);
         configure?.Invoke(options);
         // All settings are deployment-managed. The native GUI exposes effective read-only values.
-        foreach (var profile in options.Profiles)
-        {
-            if (string.IsNullOrWhiteSpace(profile.ClientName)) profile.ClientName = builder.Config["ApplicationName"] ?? System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name ?? "Umbraco";
-            profile.Validate();
-        }
-        if (options.Profiles.Select(x => (x.Name, x.Surface)).Distinct().Count() != options.Profiles.Count)
-            throw new InvalidOperationException("SOCA profile and surface must be unique");
+        options.Prepare(builder.Config["ApplicationName"] ?? System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name ?? "Umbraco");
         builder.PackageMigrationPlans().Add<SocaMigrationPlan>();
         builder.Services.AddAntiforgery();
         builder.Services.AddSingleton(options);
         builder.Services.TryAddScoped<ISocaStore, SocaStore>();
-        foreach (var profile in options.Profiles)
+        builder.Services.AddHostedService<EmergencyStateInvalidator>();
+        foreach (var profile in options.Profiles.Where(profile => !options.IsEmergency(profile)))
         {
             if (profile.Surface == "backoffice")
                 builder.AddBackOfficeExternalLogins(logins => logins.AddBackOfficeLogin(
@@ -48,7 +43,7 @@ public static class SocaExtensions
     public static IEndpointRouteBuilder MapSoca(this IEndpointRouteBuilder endpoints)
     {
         var options = endpoints.ServiceProvider.GetRequiredService<SocaOptions>();
-        foreach (var profile in options.Profiles)
+        foreach (var profile in options.Profiles.Where(profile => !options.IsEmergency(profile)))
         {
             endpoints.MapGet(profile.MetadataPath, (HttpContext context) =>
             {

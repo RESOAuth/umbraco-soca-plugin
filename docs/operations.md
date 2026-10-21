@@ -102,3 +102,20 @@ state table is intentionally preserved; remove it explicitly only after scoped a
 and backup deletion decisions. Restore must not revive pending/revoked transactions.
 Suppress callback query strings in host/reverse-proxy access logs and keep IdentityModel
 PII logging disabled. Demo logging suppresses request-query and authentication details.
+
+Management mutations require the native administrator policy and ASP.NET antiforgery
+validation. The dashboard uses Umbraco's official OpenAPI cookie/token configuration
+and obtains an administrator-bound antiforgery token before each mutation. Candidate
+tests additionally authenticate the native `UmbracoBackOffice` cookie at both initiation
+and callback, so API token and cookie claim representations cannot be confused. The
+callback must retain the same native administrator. No native cookie SameSite settings
+are changed; the separate Strict API-token cookies are not used at the callback. A
+real browser/provider/operator-cookie round trip remains unverified.
+
+At startup, global `EmergencyDisabled`, `SOCA_EMERGENCY_DISABLED` and a profile's
+`EmergencyDisabled` skip that provider's key/configuration validation, external-login
+registration and public metadata routes. This permits native local recovery even if
+a signing key is missing or corrupt. Pending transactions are invalidated after native
+package migrations finish. Restart all workers after changing deployment emergency
+settings; restore a valid configuration/key and complete fresh candidate checks before
+reactivating.

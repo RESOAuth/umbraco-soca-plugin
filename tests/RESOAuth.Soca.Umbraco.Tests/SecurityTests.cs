@@ -163,6 +163,23 @@ public sealed class SecurityTests : IDisposable
         foreach (var name in new[] { "Check", "Test", "Invalidate" })
             Assert.NotNull(typeof(SocaManagementController).GetMethod(name)!.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true).SingleOrDefault());
     }
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void EmergencyRecoveryPreparationDoesNotReadBrokenKeys(bool global, bool specific)
+    {
+        var profile = Profile(); profile.PrivateKeyFile = "/missing/soca-recovery-test.pem"; profile.EmergencyDisabled = specific;
+        var options = new SocaOptions { EmergencyDisabled = global, Profiles = [profile] };
+        options.Prepare("Local recovery");
+        Assert.True(options.IsEmergency(profile));
+    }
+    [Fact]
+    public void ActiveProviderStillRejectsMissingKeys()
+    {
+        var profile = Profile(); profile.PrivateKeyFile = "/missing/soca-active-test.pem";
+        var options = new SocaOptions { Profiles = [profile] };
+        Assert.Throws<FileNotFoundException>(() => options.Prepare("CMS"));
+    }
     [Fact]
     public void NamespacedSubjectChangesAcrossIssuers()
     {
